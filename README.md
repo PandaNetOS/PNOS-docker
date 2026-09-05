@@ -20,7 +20,7 @@ CI 自动构建并推送到三个镜像仓库：
 
 | 仓库 | 地址 |
 |------|------|
-| Docker Hub | `docker.io/<namespace>/PNOS-docker` |
+| Docker Hub | `docker.io/<username>/PNOS-docker` |
 | GitHub Container Registry | `ghcr.io/pandanetos/PNOS-docker` |
 | 阿里云 ACR | `<registry>/<namespace>/PNOS-docker` |
 
@@ -67,28 +67,34 @@ docker build -t PNOS-docker:latest .
 
 ## GitHub Secrets 配置
 
-在仓库 Settings → Secrets and variables → Actions 中配置以下 Secrets：
+在仓库 Settings → Secrets and variables → Actions 中配置以下 Secrets（与 pcdn-keeper 等生态项目统一）：
 
 ### Docker Hub
 
 | Secret | 说明 |
 |--------|------|
-| `DOCKERHUB_USERNAME` | Docker Hub 用户名 |
+| `DOCKERHUB_USERNAME` | Docker Hub 用户名（同时作为命名空间） |
 | `DOCKERHUB_TOKEN` | Docker Hub Access Token |
-| `DOCKERHUB_NAMESPACE` | 命名空间（用户名或组织名） |
 
 ### 阿里云 ACR
 
 | Secret | 说明 | 示例 |
 |--------|------|------|
-| `ACR_REGISTRY` | 注册表地址 | `registry.cn-hangzhou.aliyuncs.com` |
-| `ACR_USERNAME` | 用户名 | 阿里云账号全名 |
-| `ACR_PASSWORD` | 密码 | 固定密码 |
-| `ACR_NAMESPACE` | 命名空间 | 你的 ACR 命名空间 |
+| `ALIYUN_ACR_REGISTRY` | 注册表地址 | `registry.cn-hangzhou.aliyuncs.com` |
+| `ALIYUN_ACR_NAMESPACE` | 命名空间 | 你的 ACR 命名空间 |
+| `ALIYUN_ACR_USERNAME` | 用户名 | 阿里云账号全名 |
+| `ALIYUN_ACR_PASSWORD` | 密码 | 固定密码 |
 
 ### GHCR
 
 无需配置，使用自动生成的 `GITHUB_TOKEN`。
+
+### CI 工作流
+
+本仓库使用生态统一的 reusable workflow：
+`PandaNetOS/PandaNetOS/.github/workflows/reusable-release-docker-image.yml`
+
+支持三仓库同时推送、多架构构建、GHA 缓存、上游版本自动获取。
 
 ## 健康检查
 

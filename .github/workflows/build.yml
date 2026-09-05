@@ -1,4 +1,4 @@
-name: Build and Push Docker Image
+name: Build & Push PNOS-docker Docker Image
 
 on:
   push:
@@ -6,69 +6,26 @@ on:
     tags: ['v*']
   workflow_dispatch:
 
-env:
-  IMAGE_NAME: PNOS-docker
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Extract metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: |
-            ${{ secrets.DOCKERHUB_NAMESPACE }}/${{ env.IMAGE_NAME }}
-            ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}
-            ${{ secrets.ACR_REGISTRY }}/${{ secrets.ACR_NAMESPACE }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=ref,event=branch
-            type=ref,event=tag
-            type=sha,format=short,prefix=
-            type=raw,value=latest,enable={{is_default_branch}}
-          flavor: |
-            latest=false
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Login to GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Login to Alibaba Cloud ACR
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ secrets.ACR_REGISTRY }}
-          username: ${{ secrets.ACR_USERNAME }}
-          password: ${{ secrets.ACR_PASSWORD }}
-
-      - name: Build and push
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: true
-          platforms: linux/amd64,linux/arm64
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+    uses: PandaNetOS/PandaNetOS/.github/workflows/reusable-release-docker-image.yml@main
+    with:
+      image_name: PNOS-docker
+      platforms: linux/amd64,linux/arm64
+      push_to_ghcr: true
+      push_to_dockerhub: true
+      push_to_aliyun: true
+      tag_latest: true
+      tag_sha: true
+      provenance: false
+    secrets:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+      ALIYUN_ACR_REGISTRY: ${{ secrets.ALIYUN_ACR_REGISTRY }}
+      ALIYUN_ACR_NAMESPACE: ${{ secrets.ALIYUN_ACR_NAMESPACE }}
+      ALIYUN_ACR_USERNAME: ${{ secrets.ALIYUN_ACR_USERNAME }}
+      ALIYUN_ACR_PASSWORD: ${{ secrets.ALIYUN_ACR_PASSWORD }}
