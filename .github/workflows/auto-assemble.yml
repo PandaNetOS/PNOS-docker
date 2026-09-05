@@ -19,17 +19,17 @@ jobs:
     steps:
       - name: Check versions and trigger if needed
         run: |
-          # 获取 pnos-web 最新成功构建时间
+          # 获取 pnos-web 最新成功构建完成时间
           a_time=$(curl -s "https://api.github.com/repos/PandaNetOS/pnos-web/actions/runs?status=success&per_page=1" | jq -r '.workflow_runs[0].updated_at // empty')
-          # 获取 pnos-runtime 最新成功构建时间
+          # 获取 pnos-runtime 最新成功构建完成时间
           b_time=$(curl -s "https://api.github.com/repos/PandaNetOS/pnos-runtime/actions/runs?status=success&per_page=1" | jq -r '.workflow_runs[0].updated_at // empty')
-          # 获取 PNOS-docker 最新成功构建时间
-          c_time=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            "https://api.github.com/repos/PandaNetOS/PNOS-docker/actions/runs?status=success&per_page=1" | jq -r '.workflow_runs[0].updated_at // empty')
+          # 获取 PNOS-docker 最新构建的开始时间（不管成功失败，用 created_at）
+          c_start=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/PandaNetOS/PNOS-docker/actions/runs?per_page=1" | jq -r '.workflow_runs[0].created_at // empty')
 
-          echo "pnos-web latest:     ${a_time:-none}"
-          echo "pnos-runtime latest: ${b_time:-none}"
-          echo "PNOS-docker latest:  ${c_time:-none}"
+          echo "pnos-web completed:     ${a_time:-none}"
+          echo "pnos-runtime completed: ${b_time:-none}"
+          echo "PNOS-docker started:    ${c_start:-none}"
 
           # a 和 b 都没有成功构建，跳过
           if [ -z "$a_time" ] && [ -z "$b_time" ]; then
@@ -37,25 +37,27 @@ jobs:
             exit 0
           fi
 
-          # 取 a 和 b 的最新时间
+          # 取 a 和 b 的最新完成时间
           latest=$a_time
           if [ -z "$latest" ] || [[ "$b_time" > "$latest" ]]; then
             latest=$b_time
           fi
           echo "Latest component build: $latest"
 
-          # c 没构建过，或者 c 早于组件最新构建，才需要触发
-          if [ -n "$c_time" ] && [[ "$c_time" > "$latest" ]]; then
-            echo "PNOS-docker already up to date, skip"
+          # 关键判断：用 c 的开始时间比较
+          # 如果 c 从未构建，或者 c 开始构建时组件还没完成（c_start < latest），就需要构建
+          if [ -n "$c_start" ] && [[ "$c_start" > "$latest" ]]; then
+            echo "PNOS-docker build started after all components completed, up to date, skip"
             exit 0
           fi
+          echo "PNOS-docker needs rebuild (c_start < latest component build)"
 
           # 去重：检查是否有正在运行的构建
           running=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
             "https://api.github.com/repos/PandaNetOS/PNOS-docker/actions/runs?per_page=10" | \
             jq -r '[.workflow_runs[] | select(.status == "in_progress")] | length')
           if [ "$running" -gt 0 ]; then
-            echo "PNOS-docker build already in progress ($running), skip"
+            echo "PNOS-docker build already in progress ($running), will retry next cycle"
             exit 0
           fi
 
