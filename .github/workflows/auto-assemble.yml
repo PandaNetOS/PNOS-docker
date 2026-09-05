@@ -23,13 +23,13 @@ jobs:
           a_time=$(curl -s "https://api.github.com/repos/PandaNetOS/pnos-web/actions/runs?status=success&per_page=1" | jq -r '.workflow_runs[0].updated_at // empty')
           # 获取 pnos-runtime 最新成功构建完成时间
           b_time=$(curl -s "https://api.github.com/repos/PandaNetOS/pnos-runtime/actions/runs?status=success&per_page=1" | jq -r '.workflow_runs[0].updated_at // empty')
-          # 获取 PNOS-docker 最新构建的开始时间（不管成功失败，用 created_at）
+          # 获取 PNOS-docker build.yml 最新构建的开始时间（只看 build workflow）
           c_start=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            "https://api.github.com/repos/PandaNetOS/PNOS-docker/actions/runs?per_page=1" | jq -r '.workflow_runs[0].created_at // empty')
+            "https://api.github.com/repos/PandaNetOS/PNOS-docker/actions/workflows/build.yml/runs?per_page=1" | jq -r '.workflow_runs[0].created_at // empty')
 
           echo "pnos-web completed:     ${a_time:-none}"
           echo "pnos-runtime completed: ${b_time:-none}"
-          echo "PNOS-docker started:    ${c_start:-none}"
+          echo "PNOS-docker build started: ${c_start:-none}"
 
           # a 和 b 都没有成功构建，跳过
           if [ -z "$a_time" ] && [ -z "$b_time" ]; then
@@ -44,18 +44,16 @@ jobs:
           fi
           echo "Latest component build: $latest"
 
-          # 关键判断：用 c 的开始时间比较
-          # 如果 c 从未构建，或者 c 开始构建时组件还没完成（c_start < latest），就需要构建
+          # 用 c 的开始时间比较：如果 c 开始构建时组件都已完成，说明已是最新
           if [ -n "$c_start" ] && [[ "$c_start" > "$latest" ]]; then
             echo "PNOS-docker build started after all components completed, up to date, skip"
             exit 0
           fi
-          echo "PNOS-docker needs rebuild (c_start < latest component build)"
+          echo "PNOS-docker needs rebuild"
 
-          # 去重：检查是否有正在运行的构建
+          # 去重：只检查 build.yml 是否有正在运行的构建
           running=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            "https://api.github.com/repos/PandaNetOS/PNOS-docker/actions/runs?per_page=10" | \
-            jq -r '[.workflow_runs[] | select(.status == "in_progress")] | length')
+            "https://api.github.com/repos/PandaNetOS/PNOS-docker/actions/workflows/build.yml/runs?per_page=1&status=in_progress" | jq -r '.total_count')
           if [ "$running" -gt 0 ]; then
             echo "PNOS-docker build already in progress ($running), will retry next cycle"
             exit 0
