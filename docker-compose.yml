@@ -7,5 +7,4 @@ services:
     ports:
       - "5540:80"
     volumes:
-      - ./pnos/data:/data
-      - ./pnos/media:/media
+      - ./pnos:/pnos

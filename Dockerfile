@@ -25,16 +25,16 @@ COPY --from=runtime-builder /build/pnos-runtime/target/release/pnos-runtime /usr
 COPY --from=web-builder /build/dist /var/www/pnos-web
 
 # 创建数据目录
-RUN mkdir -p /data /media
+RUN mkdir -p /pnos/data /pnos/media
 
 EXPOSE 80
 
 ENV PNOS_PORT=80
-ENV PNOS_DATA_DIR=/data
-ENV PNOS_MEDIA_DIR=/media
+ENV PNOS_DATA_DIR=/pnos/data
+ENV PNOS_MEDIA_DIR=/pnos/media
 ENV RUST_LOG=info
 
-VOLUME ["/data", "/media"]
+VOLUME ["/pnos"]
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
   CMD curl -f http://localhost:80/health || exit 1

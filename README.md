@@ -37,16 +37,15 @@ CI 自动构建并推送到三个镜像仓库：
 | 变量 | 默认值 | 说明 |
 |------|--------|------|
 | `PNOS_PORT` | `80` | 监听端口 |
-| `PNOS_DATA_DIR` | `/data` | 应用数据目录 |
-| `PNOS_MEDIA_DIR` | `/media` | 媒体目录 |
+| `PNOS_DATA_DIR` | `/pnos/data` | 应用数据目录 |
+| `PNOS_MEDIA_DIR` | `/pnos/media` | 媒体目录 |
 | `RUST_LOG` | `info` | 日志级别 |
 
 ## 卷
 
 | 路径 | 说明 |
 |------|------|
-| `/data` | 应用数据（持久化） |
-| `/media` | 媒体文件 |
+| `/pnos` | 持久化根目录（含 data/ 和 media/ 子目录） |
 
 ## 构建
 
