@@ -22,7 +22,7 @@ CI 自动构建并推送到三个镜像仓库：
 |------|------|
 | Docker Hub | `docker.io/pandageneral/PNOS-docker` |
 | GitHub Container Registry | `ghcr.io/pandanetos/PNOS-docker` |
-| 阿里云 ACR | `registry.cn-hangzhou.aliyuncs.com/pandanetos/PNOS-docker` |
+| 阿里云 ACR | `crpi-yh02yjkhdi325jm5.cn-hangzhou.personal.cr.aliyuncs.com/pandanetos/PNOS-docker` |
 
 支持架构：`linux/amd64`、`linux/arm64`
 
@@ -58,7 +58,7 @@ docker build -t PNOS-docker:latest .
 
 ### CI 构建
 
-推送到 main 分支或打 tag 自动触发 GitHub Actions 构建，使用生态统一的 reusable workflow，三仓库同时推送。
+手动触发 GitHub Actions 构建，使用生态统一的 reusable workflow，三仓库同时推送。
 
 多阶段构建：
 1. Node 20 构建 pnos-web
