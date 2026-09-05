@@ -3,7 +3,7 @@ FROM node:20-bookworm-slim AS web-builder
 WORKDIR /build
 RUN apt-get update && apt-get install -y --no-install-recommends git ca-certificates && rm -rf /var/lib/apt/lists/*
 RUN git clone https://github.com/PandaNetOS/pnos-web.git .
-RUN npm ci
+RUN npm install
 RUN npm run build
 
 # ===== Stage 2: 构建 pnos-runtime =====
