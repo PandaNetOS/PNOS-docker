@@ -4,30 +4,80 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: build-${{ github.ref }}
-  cancel-in-progress: true
+  group: pnos-docker-build
+  cancel-in-progress: false
 
 permissions:
   contents: read
   packages: write
+  actions: read
 
 jobs:
-  get-versions:
+  check:
     runs-on: ubuntu-latest
     outputs:
-      web_version: ${{ steps.get.outputs.web_version }}
-      runtime_version: ${{ steps.get.outputs.runtime_version }}
+      should_build: ${{ steps.check.outputs.should_build }}
+      web_version: ${{ steps.check.outputs.web_version }}
+      runtime_version: ${{ steps.check.outputs.runtime_version }}
     steps:
-      - id: get
+      - id: check
         run: |
-          web=$(curl -s https://api.github.com/repos/PandaNetOS/pnos-web/tags | jq -r '.[0].name')
-          runtime=$(curl -s https://api.github.com/repos/PandaNetOS/pnos-runtime/tags | jq -r '.[0].name')
-          echo "web_version=$web" >> $GITHUB_OUTPUT
-          echo "runtime_version=$runtime" >> $GITHUB_OUTPUT
-          echo "pnos-web: $web, pnos-runtime: $runtime"
+          set -e
+
+          # 1. 检查 pnos-web / pnos-runtime 是否有正在构建的
+          web_running=$(curl -s "https://api.github.com/repos/PandaNetOS/pnos-web/actions/runs?status=in_progress&per_page=1" | jq '.total_count')
+          runtime_running=$(curl -s "https://api.github.com/repos/PandaNetOS/pnos-runtime/actions/runs?status=in_progress&per_page=1" | jq '.total_count')
+          echo "pnos-web building: $web_running, pnos-runtime building: $runtime_running"
+
+          if [ "$web_running" -gt 0 ] || [ "$runtime_running" -gt 0 ]; then
+            echo "组件正在构建中，退出等待下次触发"
+            echo "should_build=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # 2. 获取 a/b 最新成功构建完成时间
+          web_time=$(curl -s "https://api.github.com/repos/PandaNetOS/pnos-web/actions/runs?status=success&per_page=1" | jq -r '.workflow_runs[0].updated_at // empty')
+          runtime_time=$(curl -s "https://api.github.com/repos/PandaNetOS/pnos-runtime/actions/runs?status=success&per_page=1" | jq -r '.workflow_runs[0].updated_at // empty')
+          echo "pnos-web completed:     ${web_time:-none}"
+          echo "pnos-runtime completed: ${runtime_time:-none}"
+
+          if [ -z "$web_time" ] && [ -z "$runtime_time" ]; then
+            echo "没有成功的组件构建，跳过"
+            echo "should_build=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # 3. 获取 c 上次构建开始时间
+          c_start=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/PandaNetOS/PNOS-docker/actions/workflows/build.yml/runs?per_page=1" | jq -r '.workflow_runs[0].created_at // empty')
+          echo "PNOS-docker last build started: ${c_start:-none}"
+
+          # 4. 取 a/b 最新完成时间
+          latest=$web_time
+          if [ -z "$latest" ] || [ -n "$runtime_time" ] && [ "$runtime_time" \> "$latest" ]; then
+            latest=$runtime_time
+          fi
+          echo "Latest component build: $latest"
+
+          # 5. 如果 c 上次构建开始时间晚于 a/b 最新完成时间，说明已是最新
+          if [ -n "$c_start" ] && [ "$c_start" \> "$latest" ]; then
+            echo "已是最新，跳过构建"
+            echo "should_build=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # 6. 需要构建，获取最新 tag 作为版本号
+          web_version=$(curl -s https://api.github.com/repos/PandaNetOS/pnos-web/tags | jq -r '.[0].name')
+          runtime_version=$(curl -s https://api.github.com/repos/PandaNetOS/pnos-runtime/tags | jq -r '.[0].name')
+          echo "需要构建: web=$web_version runtime=$runtime_version"
+
+          echo "should_build=true" >> $GITHUB_OUTPUT
+          echo "web_version=$web_version" >> $GITHUB_OUTPUT
+          echo "runtime_version=$runtime_version" >> $GITHUB_OUTPUT
 
   build:
-    needs: get-versions
+    needs: check
+    if: needs.check.outputs.should_build == 'true'
     uses: PandaNetOS/PandaNetOS/.github/workflows/reusable-release-docker-image.yml@main
     with:
       image_name: pnos-docker
@@ -38,8 +88,8 @@ jobs:
       tag_latest: true
       tag_sha: true
       custom_tags: |
-        type=raw,value=front-${{ needs.get-versions.outputs.web_version }}_backend-${{ needs.get-versions.outputs.runtime_version }}
-      build_args: '{"WEB_VERSION":"${{ needs.get-versions.outputs.web_version }}","RUNTIME_VERSION":"${{ needs.get-versions.outputs.runtime_version }}"}'
+        type=raw,value=front-${{ needs.check.outputs.web_version }}_backend-${{ needs.check.outputs.runtime_version }}
+      build_args: '{"WEB_VERSION":"${{ needs.check.outputs.web_version }}","RUNTIME_VERSION":"${{ needs.check.outputs.runtime_version }}"}'
       provenance: false
     secrets:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
