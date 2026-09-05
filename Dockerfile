@@ -1,28 +1,13 @@
-# PNOS-docker 三阶段构建：前端 → 后端 → 运行时
-# ===== Stage 1: 构建 pnos-web =====
-FROM node:20-bookworm-slim AS web-builder
-WORKDIR /build
-RUN apt-get update && apt-get install -y --no-install-recommends git ca-certificates && rm -rf /var/lib/apt/lists/*
-RUN git clone https://github.com/PandaNetOS/pnos-web.git .
-RUN npm install
-RUN npm run build
+# PNOS-docker：纯组装镜像，从 pnos-runtime 和 pnos-web 的构建产物中复制
+FROM ghcr.io/pandanetos/pnos-runtime:latest AS runtime
+FROM ghcr.io/pandanetos/pnos-web:latest AS web
 
-# ===== Stage 2: 构建 pnos-runtime =====
-FROM rust:bookworm AS runtime-builder
-WORKDIR /build
-RUN apt-get update && apt-get install -y --no-install-recommends git ca-certificates pkg-config libssl-dev && rm -rf /var/lib/apt/lists/*
-RUN git clone https://github.com/PandaNetOS/pnos-spec.git
-RUN git clone https://github.com/PandaNetOS/pnos-runtime.git
-WORKDIR /build/pnos-runtime
-RUN cargo build --release
-
-# ===== Stage 3: 运行时 =====
 FROM debian:bookworm-slim
 RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates tzdata curl && rm -rf /var/lib/apt/lists/*
 
 # 复制二进制和前端静态文件
-COPY --from=runtime-builder /build/pnos-runtime/target/release/pnos-runtime /usr/local/bin/pnos-runtime
-COPY --from=web-builder /build/dist /var/www/pnos-web
+COPY --from=runtime /usr/local/bin/pnos-runtime /usr/local/bin/pnos-runtime
+COPY --from=web /dist /var/www/pnos-web
 
 # 创建数据目录
 RUN mkdir -p /pnos/data /pnos/media

@@ -16,7 +16,7 @@ jobs:
     uses: PandaNetOS/PandaNetOS/.github/workflows/reusable-release-docker-image.yml@main
     with:
       image_name: PNOS-docker
-      platforms: linux/amd64,linux/arm64
+      platforms: linux/amd64
       push_to_ghcr: true
       push_to_dockerhub: true
       push_to_aliyun: true
