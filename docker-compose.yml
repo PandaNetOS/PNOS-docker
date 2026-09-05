@@ -1,6 +1,5 @@
 services:
   pnos:
-    build: .
     image: crpi-yh02yjkhdi325jm5.cn-hangzhou.personal.cr.aliyuncs.com/pandanetos/PNOS-docker:latest
     container_name: pnos
     restart: unless-stopped
