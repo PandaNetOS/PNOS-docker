@@ -12,7 +12,7 @@ MVP 阶段，提供系统监控和 WebUI。容器管理和应用商店功能后�
 docker compose up -d
 ```
 
-打开 http://localhost 即可看到 pnos 管理界面。
+打开 http://localhost:5540 即可看到 pnos 管理界面。
 
 ## 镜像地址
 
@@ -20,9 +20,9 @@ CI 自动构建并推送到三个镜像仓库：
 
 | 仓库 | 地址 |
 |------|------|
-| Docker Hub | `docker.io/<username>/PNOS-docker` |
+| Docker Hub | `docker.io/pandageneral/PNOS-docker` |
 | GitHub Container Registry | `ghcr.io/pandanetos/PNOS-docker` |
-| 阿里云 ACR | `<registry>/<namespace>/PNOS-docker` |
+| 阿里云 ACR | `registry.cn-hangzhou.aliyuncs.com/pandanetos/PNOS-docker` |
 
 支持架构：`linux/amd64`、`linux/arm64`
 
@@ -62,7 +62,7 @@ docker build -t PNOS-docker:latest .
 
 多阶段构建：
 1. Node 20 构建 pnos-web
-2. Rust 1.77 构建 pnos-runtime
+2. Rust stable 构建 pnos-runtime
 3. Debian slim 运行时（约 150MB）
 
 ## 健康检查

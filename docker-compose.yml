@@ -1,7 +1,7 @@
 services:
   pnos:
     build: .
-    image: registry.cn-hangzhou.aliyuncs.com/你的命名空间/PNOS-docker:latest
+    image: registry.cn-hangzhou.aliyuncs.com/pandanetos/PNOS-docker:latest
     container_name: pnos
     restart: unless-stopped
     ports:
