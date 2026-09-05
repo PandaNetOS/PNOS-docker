@@ -5,7 +5,7 @@ services:
     container_name: pnos
     restart: unless-stopped
     ports:
-      - "80:80"
+      - "5540:80"
     volumes:
       - ./data:/data
       - ./media:/media
