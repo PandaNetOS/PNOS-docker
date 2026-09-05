@@ -2,6 +2,15 @@ name: Build & Push PNOS-docker Docker Image
 
 on:
   workflow_dispatch:
+    inputs:
+      web_version:
+        description: "pnos-web 版本号（如 v0.1.0）"
+        default: "latest"
+        required: false
+      runtime_version:
+        description: "pnos-runtime 版本号（如 v0.1.0）"
+        default: "latest"
+        required: false
 
 concurrency:
   group: build-${{ github.ref }}
@@ -22,6 +31,9 @@ jobs:
       push_to_aliyun: true
       tag_latest: true
       tag_sha: true
+      custom_tags: |
+        type=raw,value=front-${{ github.event.inputs.web_version }}_backend-${{ github.event.inputs.runtime_version }}
+      build_args: '{"WEB_VERSION":"${{ github.event.inputs.web_version }}","RUNTIME_VERSION":"${{ github.event.inputs.runtime_version }}"}'
       provenance: false
     secrets:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}

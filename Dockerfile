@@ -1,6 +1,8 @@
 # PNOS-docker：纯组装镜像，从 pnos-runtime 和 pnos-web 的构建产物中复制
-FROM ghcr.io/pandanetos/pnos-runtime:latest AS runtime
-FROM ghcr.io/pandanetos/pnos-web:latest AS web
+ARG RUNTIME_VERSION=latest
+ARG WEB_VERSION=latest
+FROM ghcr.io/pandanetos/pnos-runtime:${RUNTIME_VERSION} AS runtime
+FROM ghcr.io/pandanetos/pnos-web:${WEB_VERSION} AS web
 
 FROM debian:bookworm-slim
 RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates tzdata curl && rm -rf /var/lib/apt/lists/*
