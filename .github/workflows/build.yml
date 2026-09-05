@@ -10,6 +10,10 @@ concurrency:
   group: build-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+  packages: write
+
 jobs:
   build:
     uses: PandaNetOS/PandaNetOS/.github/workflows/reusable-release-docker-image.yml@main
