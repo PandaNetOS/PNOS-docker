@@ -2,15 +2,6 @@ name: Build & Push PNOS-docker Docker Image
 
 on:
   workflow_dispatch:
-    inputs:
-      web_version:
-        description: "pnos-web 版本号（如 v0.1.0）"
-        default: "latest"
-        required: false
-      runtime_version:
-        description: "pnos-runtime 版本号（如 v0.1.0）"
-        default: "latest"
-        required: false
 
 concurrency:
   group: build-${{ github.ref }}
@@ -21,7 +12,22 @@ permissions:
   packages: write
 
 jobs:
+  get-versions:
+    runs-on: ubuntu-latest
+    outputs:
+      web_version: ${{ steps.get.outputs.web_version }}
+      runtime_version: ${{ steps.get.outputs.runtime_version }}
+    steps:
+      - id: get
+        run: |
+          web=$(curl -s https://api.github.com/repos/PandaNetOS/pnos-web/tags | jq -r '.[0].name')
+          runtime=$(curl -s https://api.github.com/repos/PandaNetOS/pnos-runtime/tags | jq -r '.[0].name')
+          echo "web_version=$web" >> $GITHUB_OUTPUT
+          echo "runtime_version=$runtime" >> $GITHUB_OUTPUT
+          echo "pnos-web: $web, pnos-runtime: $runtime"
+
   build:
+    needs: get-versions
     uses: PandaNetOS/PandaNetOS/.github/workflows/reusable-release-docker-image.yml@main
     with:
       image_name: PNOS-docker
@@ -32,8 +38,8 @@ jobs:
       tag_latest: true
       tag_sha: true
       custom_tags: |
-        type=raw,value=front-${{ github.event.inputs.web_version }}_backend-${{ github.event.inputs.runtime_version }}
-      build_args: '{"WEB_VERSION":"${{ github.event.inputs.web_version }}","RUNTIME_VERSION":"${{ github.event.inputs.runtime_version }}"}'
+        type=raw,value=front-${{ needs.get-versions.outputs.web_version }}_backend-${{ needs.get-versions.outputs.runtime_version }}
+      build_args: '{"WEB_VERSION":"${{ needs.get-versions.outputs.web_version }}","RUNTIME_VERSION":"${{ needs.get-versions.outputs.runtime_version }}"}'
       provenance: false
     secrets:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
