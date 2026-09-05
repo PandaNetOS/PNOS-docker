@@ -4,7 +4,7 @@ pnos 系统的 Docker 镜像分发。包含 pnos-runtime（后端）和 pnos-web
 
 ## 当前阶段
 
-MVP 阶段，仅提供系统监控和 WebUI。容器管理和应用商店功能后续迭代。
+MVP 阶段，提供系统监控和 WebUI。容器管理和应用商店功能后续迭代。
 
 ## 快速开始
 
@@ -58,47 +58,23 @@ docker build -t PNOS-docker:latest .
 
 ### CI 构建
 
-推送到 main 分支或打 tag 自动触发 GitHub Actions 构建。
+推送到 main 分支或打 tag 自动触发 GitHub Actions 构建，使用生态统一的 reusable workflow，三仓库同时推送。
 
 多阶段构建：
 1. Node 20 构建 pnos-web
 2. Rust 1.77 构建 pnos-runtime
 3. Debian slim 运行时（约 150MB）
 
-## GitHub Secrets 配置
-
-在仓库 Settings → Secrets and variables → Actions 中配置以下 Secrets（与 pcdn-keeper 等生态项目统一）：
-
-### Docker Hub
-
-| Secret | 说明 |
-|--------|------|
-| `DOCKERHUB_USERNAME` | Docker Hub 用户名（同时作为命名空间） |
-| `DOCKERHUB_TOKEN` | Docker Hub Access Token |
-
-### 阿里云 ACR
-
-| Secret | 说明 | 示例 |
-|--------|------|------|
-| `ALIYUN_ACR_REGISTRY` | 注册表地址 | `registry.cn-hangzhou.aliyuncs.com` |
-| `ALIYUN_ACR_NAMESPACE` | 命名空间 | 你的 ACR 命名空间 |
-| `ALIYUN_ACR_USERNAME` | 用户名 | 阿里云账号全名 |
-| `ALIYUN_ACR_PASSWORD` | 密码 | 固定密码 |
-
-### GHCR
-
-无需配置，使用自动生成的 `GITHUB_TOKEN`。
-
-### CI 工作流
-
-本仓库使用生态统一的 reusable workflow：
-`PandaNetOS/PandaNetOS/.github/workflows/reusable-release-docker-image.yml`
-
-支持三仓库同时推送、多架构构建、GHA 缓存、上游版本自动获取。
-
 ## 健康检查
 
 容器内置健康检查，访问 `http://localhost:80/health` 返回 `ok`。
+
+## 相关仓库
+
+- [pnos-spec](https://github.com/PandaNetOS/pnos-spec) — 系统级标准库
+- [pnos-runtime](https://github.com/PandaNetOS/pnos-runtime) — 系统后端
+- [pnos-web](https://github.com/PandaNetOS/pnos-web) — 系统前端
+- [pnos-store](https://github.com/PandaNetOS/pnos-store) — 应用商店
 
 ## 许可证
 
