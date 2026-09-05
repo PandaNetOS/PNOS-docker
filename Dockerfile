@@ -8,7 +8,7 @@ RUN npm install
 RUN npm run build
 
 # ===== Stage 2: 构建 pnos-runtime =====
-FROM rust:1.77-bookworm AS runtime-builder
+FROM rust:bookworm AS runtime-builder
 WORKDIR /build
 RUN apt-get update && apt-get install -y --no-install-recommends git ca-certificates pkg-config libssl-dev && rm -rf /var/lib/apt/lists/*
 RUN git clone https://github.com/PandaNetOS/pnos-spec.git
