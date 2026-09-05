@@ -30,7 +30,7 @@ jobs:
     needs: get-versions
     uses: PandaNetOS/PandaNetOS/.github/workflows/reusable-release-docker-image.yml@main
     with:
-      image_name: PNOS-docker
+      image_name: pnos-docker
       platforms: linux/amd64
       push_to_ghcr: true
       push_to_dockerhub: true

@@ -16,21 +16,20 @@ docker compose up -d
 
 ## 镜像地址
 
-CI 自动构建并推送到三个镜像仓库：
+CI 构建并推送到三个镜像仓库：
 
 | 仓库 | 地址 |
 |------|------|
-| Docker Hub | `docker.io/pandageneral/PNOS-docker` |
-| GitHub Container Registry | `ghcr.io/pandanetos/PNOS-docker` |
-| 阿里云 ACR | `crpi-yh02yjkhdi325jm5.cn-hangzhou.personal.cr.aliyuncs.com/pandanetos/PNOS-docker` |
+| Docker Hub | `docker.io/pandageneral/pnos-docker` |
+| GitHub Container Registry | `ghcr.io/pandanetos/pnos-docker` |
+| 阿里云 ACR | `crpi-yh02yjkhdi325jm5.cn-hangzhou.personal.cr.aliyuncs.com/pandanetos/pnos-docker` |
 
-支持架构：`linux/amd64`、`linux/arm64`
+支持架构：`linux/amd64`
 
 标签策略：
-- `latest` — main 分支最新构建
-- `main` — main 分支
-- `v1.0.0` — Git tag
-- `abc1234` — Git commit short sha
+- `latest` — 最新构建
+- `front-v0.1.0_backend-v0.1.0` — 对应前端/后端版本组合
+- `sha-abc1234` — Git commit short sha
 
 ## 环境变量
 
@@ -52,16 +51,16 @@ CI 自动构建并推送到三个镜像仓库：
 ### 本地构建
 
 ```bash
-docker build -t PNOS-docker:latest .
+docker build -t pnos-docker:latest .
 ```
 
 ### CI 构建
 
-手动触发 GitHub Actions 构建，使用生态统一的 reusable workflow，三仓库同时推送。
+手动触发 GitHub Actions 构建，自动获取 pnos-web 和 pnos-runtime 的最新 tag，使用生态统一的 reusable workflow，三仓库同时推送。
 
-多阶段构建：
-1. Node 20 构建 pnos-web
-2. Rust stable 构建 pnos-runtime
+纯组装模式：
+1. 从 `ghcr.io/pandanetos/pnos-runtime:<tag>` 复制二进制
+2. 从 `ghcr.io/pandanetos/pnos-web:<tag>` 复制前端静态文件
 3. Debian slim 运行时（约 150MB）
 
 ## 健康检查
