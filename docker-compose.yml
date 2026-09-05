@@ -1,7 +1,7 @@
 services:
   pnos:
     build: .
-    image: pandanetos/pnos:latest
+    image: pandanetos/PNOS-docker:latest
     container_name: pnos
     restart: unless-stopped
     ports:

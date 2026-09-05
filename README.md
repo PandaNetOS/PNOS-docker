@@ -20,9 +20,9 @@ CI 自动构建并推送到三个镜像仓库：
 
 | 仓库 | 地址 |
 |------|------|
-| Docker Hub | `docker.io/<namespace>/pnos` |
-| GitHub Container Registry | `ghcr.io/pandanetos/pnos` |
-| 阿里云 ACR | `<registry>/<namespace>/pnos` |
+| Docker Hub | `docker.io/<namespace>/PNOS-docker` |
+| GitHub Container Registry | `ghcr.io/pandanetos/PNOS-docker` |
+| 阿里云 ACR | `<registry>/<namespace>/PNOS-docker` |
 
 支持架构：`linux/amd64`、`linux/arm64`
 
@@ -53,7 +53,7 @@ CI 自动构建并推送到三个镜像仓库：
 ### 本地构建
 
 ```bash
-docker build -t pnos:latest .
+docker build -t PNOS-docker:latest .
 ```
 
 ### CI 构建
