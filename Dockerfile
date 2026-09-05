@@ -1,3 +1,4 @@
+# PNOS-docker 三阶段构建：前端 → 后端 → 运行时
 # ===== Stage 1: 构建 pnos-web =====
 FROM node:20-bookworm-slim AS web-builder
 WORKDIR /build
